@@ -1,0 +1,9 @@
+anthropic>=0.40
+pyswisseph>=2.10
+fastapi
+uvicorn[standard]
+python-dotenv
+mcp[cli]
+pillow
+httpx
+pydantic>=2.0
