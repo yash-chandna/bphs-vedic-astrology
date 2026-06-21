@@ -25,6 +25,37 @@ Pull these in as needed during the investigation — don't load all upfront:
 
 ---
 
+## Step 0 — Intake: Establish What Is Already Known
+
+When this skill is invoked, start here before doing any astrological reasoning. Ask the person directly:
+
+> "Let's start with what you already know or suspect. Please tell me:
+> 1. Do you have a date of birth (even approximate — a year, a season, a decade)?
+> 2. Do you have a time of birth (even rough — morning, afternoon, night, or a specific time someone told you)?
+> 3. Do you have a birth place (city or region)?"
+
+Then adapt the entire workflow based on what they provide:
+
+| Situation | What's known | Workflow |
+|---|---|---|
+| **Full unknown** | Nothing at all | Run all 6 steps — collect traits, events, reverse-dasha, transit, lagna rising |
+| **Year known, time unknown** | Birth year (e.g., "1983") | Skip Step 3 (dasha year calc); focus on lagna from traits + transit month narrowing + rising time |
+| **Date known, time unknown** | Full date (e.g., "15 June 1983") | Cast chart for that date at various times; use lagna traits + life events to pick the right rising sign and narrow to a 2-hour window; hand off to `/rectify` |
+| **Approximate date** | Season or year range (e.g., "sometime in 1983, maybe winter") | Use dasha reverse-calc to confirm/eliminate years; use transits to pick season; then lagna rising for time |
+| **Time known, date uncertain** | Time (e.g., "I was born at 6am") | Lagna is known from time; use that lagna's traits to confirm or redirect, then dasha reverse-calc for birth year |
+| **Partial time** | Rough time (e.g., "morning" or "after sunset") | Eliminates ~half the lagnas immediately; proceed with remaining candidates |
+| **Family lore only** | "I think I was born around noon on a Tuesday in winter 1979" | Treat as approximate date + approximate time; validate via traits and dasha, then refine |
+
+The goal in every case is to move the person from uncertainty toward 1–3 specific candidate charts, then hand off to `/rectify` for final precision.
+
+After establishing what's known, also ask:
+
+> "Do you have a guess — even a rough one — about your birth date or time? Sometimes family members mentioned something, or you've seen a partial record. Even 'I think I'm a Scorpio' helps."
+
+Accept the guess, note it, and treat it as a hypothesis to test — not a confirmed fact.
+
+---
+
 ## Step 1 — Gather Evidence
 
 Before reasoning, collect everything available. Ask the person for:
@@ -232,8 +263,14 @@ Every deduction must carry a BPHS citation: `[BPHS Ch.X, Sl.Y]` or `[BPHS p.N]`.
 
 ## Handoff to /rectify
 
-Once 1–3 candidate dates and time windows are identified, tell the user:
+Once 1–3 candidate dates and time windows are identified — or when the date is confirmed but only the time is unknown — hand off to `/rectify`:
 
-> "We now have [N] candidate birth dates. To narrow further, run the BPHS agent with each candidate and use `/rectify` — it will test the chart against your life events more precisely and home in on the exact time."
+> "We now have [N] candidate birth dates. To narrow further, run the BPHS agent and use `/rectify` with each candidate — it will test the chart against your life events more precisely and home in on the exact time."
 
-The birthdate finder does the macro work (year + lagna). Rectification does the micro work (exact time within that lagna).
+**If date is already confirmed:** go straight to `/rectify` — skip this skill entirely after Step 0, or use only the lagna-rising-time step (Step 6) to give the user a time window to feed into rectification.
+
+**If time is already confirmed:** use the known time to fix the lagna, then run only Steps 3–5 to find the birth year and date.
+
+The division of labour:
+- This skill: macro work — birth year range + candidate lagna(s) + birth season
+- `/rectify`: micro work — exact time within a known lagna, validated against life events minute by minute
