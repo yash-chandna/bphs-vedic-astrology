@@ -56,6 +56,46 @@ Accept the guess, note it, and treat it as a hypothesis to test — not a confir
 
 ---
 
+## The Questioning Loop — Keep Going Until BPHS Confirms
+
+This is the most important behavioural rule of this skill: **never stop asking questions until the answer is confirmed by BPHS rules.** Do not present a birth date or time as a finding until at least two independent lines of BPHS evidence agree on it.
+
+The loop works like this:
+
+1. Ask a question
+2. Receive an answer
+3. Apply BPHS rules to what was just learned — does it eliminate candidates? Does it confirm one?
+4. If not yet confirmed: identify the single most useful next question and ask it
+5. Repeat
+
+**What "confirmed" means:** At least two of the following lines of evidence must converge on the same lagna and birth period before you state anything as a finding:
+- Physical/personality traits match the lagna (Ch. 3)
+- Dasha reverse-calculation places the birth year in that range (Ch. 46)
+- Yoga signatures in the life story are consistent with that lagna's chart (Ch. 35–39)
+- Transit triggers at known life event dates make sense for that chart
+
+Until that convergence happens, keep investigating. Present only intermediate hypotheses, clearly labelled as such.
+
+**How to ask questions effectively:**
+
+- Ask one question at a time — not a list of 10
+- Make each question the one that would most reduce uncertainty given what's already known
+- Explain briefly why you're asking: "I'm asking about your health because the 6th house placement would confirm or rule out Virgo lagna"
+- If a question feels personal (illness, death of parent, financial loss), acknowledge that and let the person skip it — but note you'll need another route to the same information
+- If the person gives a vague answer ("I was kind of sick once"), probe gently: "Do you remember roughly what year, or how serious it was?"
+
+**Never say:** "Based on the information provided, your birth date is likely..." until BPHS convergence is reached.
+
+**Do say:** "We now have two consistent lines of evidence pointing to Scorpio lagna and a 1981–1983 birth year. I want to ask about one more life event to confirm before we commit to this. [question]"
+
+**What to do if stuck:**
+- If the person can't answer a question (doesn't remember, doesn't know), move to a different evidence type — don't repeat the same approach
+- If two candidate lagnas are equally supported after 10+ questions, ask specifically about the physical trait that most distinguishes them
+- If the dasha calculation produces ambiguous results, ask about a third life event to break the tie
+- Never give up — even "I have no idea about anything" usually yields something when you ask about general life themes, the decade they were born, or whether people describe them as calm vs. restless
+
+---
+
 ## Step 1 — Gather Evidence
 
 Before reasoning, collect everything available. Ask the person for:
@@ -221,7 +261,9 @@ If the person knows anything at all about the time ("before sunrise", "around no
 
 ## Output Format
 
-Present findings as a structured report:
+**Do not produce this report until BPHS convergence is reached** — two or more independent evidence lines must agree. Until then, only share intermediate reasoning inline as you ask the next question.
+
+When confirmed, present findings as a structured report:
 
 ```
 ## Birth Date & Time Estimation Report
@@ -252,6 +294,54 @@ Suggest running the BPHS agent's /rectify command on each candidate for final na
 ### What Would Increase Confidence
 List the one or two additional pieces of information that would most tighten the estimate.
 ```
+
+---
+
+## Using VedAstro During the Investigation
+
+Don't wait until a chart is "confirmed" to use VedAstro — use it actively throughout the questioning loop to test candidates and fetch BPHS passages.
+
+### Fetching BPHS passages for a deduction
+
+When you need to cite a specific BPHS rule (e.g., "what does BPHS say about Saturn in the 7th causing delay in marriage?"), fetch it via the retriever rather than guessing:
+
+```python
+from bphs_agent.knowledge.retriever import get_or_fetch
+passages = get_or_fetch("saturn_7th_marriage_delay", "Saturn in seventh house delay marriage BPHS")
+```
+
+This checks `learned.json` first (instant), then hits VedAstro's SearchSourceText API, then MCP fallback. The result gets stored in `learned.json` for future use.
+
+### Testing a candidate birth chart
+
+When you have a candidate date + time + place, compute the actual chart and check it against what the person described. Use the VedAstro REST API via `chart/client.py`:
+
+```python
+from bphs_agent.chart.client import fetch_chart
+chart = fetch_chart(name="Candidate", dob="1981-03-15", tob="21:00", place="Mumbai")
+# Now check: does this chart have the yoga/dasha/lagna the investigation points to?
+```
+
+Or use the MCP for a natural-language question about the candidate chart:
+
+```python
+from bphs_agent.chart.vedastro_mcp import get_context_data
+result = get_context_data(chart.birth, "What is the Vimshottari dasha sequence and current period?")
+```
+
+### When to call VedAstro during questioning
+
+- **After Step 3** (dasha reverse-calc): test each candidate birth year by computing the actual dasha sequence for a representative date in that year and checking it against the known life events
+- **After Step 4** (yoga cross-check): fetch the actual chart for 2–3 candidate dates and verify the yogas are present
+- **After Step 5** (transit narrowing): use VedAstro to compute exact Saturn/Jupiter positions for the event year and confirm the transit theory
+- **Any time you need a BPHS citation** you don't already have: use `get_or_fetch()` rather than inventing a sloka number
+
+### MCP vs REST
+
+- Use **REST** (`fetch_chart`) when you have a full date + time + place and want the full `ChartData` object
+- Use **MCP** (`get_context_data`) when you want a plain-English question answered about a chart
+- Use **`get_or_fetch`** (retriever) when you need BPHS text passages to support a deduction
+- Use **`search_methods`** if you're unsure what VedAstro can calculate
 
 ---
 
