@@ -21,48 +21,49 @@ Read these when you need knowledge for a specific domain — don't load all of t
 | `references/shadbala.md` | Six balas, minimum thresholds, Ishta/Kashta Phala |
 | `references/divisionals.md` | 16 Shodashavarga charts, Navamsa rules, Varga Visesha |
 | `references/matchmaking.md` | Ashtakoot Guna Milan, Mangal Dosha, chart compatibility |
+| `references/career.md` | 10th house, Dasamsa (D10), profession by planet, career dasha timing |
 
 ---
 
-## The Knowledge Database: `learned.py`
+## The Knowledge Database: `learned.json`
 
-`bphs_agent/knowledge/bphs_rules/learned.py` is the system's persistent, growing knowledge base — source-controlled and never to be deleted.
+`bphs_agent/knowledge/bphs_rules/learned.json` is the system's persistent, growing knowledge base — source-controlled and never to be deleted or gitignored.
 
 ### How it works
 
-Every time a skill encounters a topic not already known, it fetches the relevant BPHS passages from VedAstro and **permanently writes them into `learned.py`**. The next time that topic appears, the system reads locally — instantly, for free.
+Every time a skill encounters a topic not already known, it fetches the relevant BPHS passages from VedAstro and **permanently writes them into `learned.json`**. The next time that topic appears, the system reads locally — instantly, for free. The file currently holds 74+ topics and grows with every new query.
 
-```python
-LEARNED: dict[str, list[dict]] = {
+```json
+{
   "lagna_lord_effects": [
-    {"text": "...", "page": 42, "score": 0.93},
+    {"text": "...", "page": 42, "score": 0.93}
   ],
-  "saturn_7th_house": [...],
+  "saturn_7th_house": [...]
 }
 ```
 
 ### Lookup hierarchy (checked in this order)
 
-1. **Hardcoded rules** (`references/*.md` + `bphs_rules/planets.py` etc.) — highest authority
-2. **`learned.py`** — permanently encoded passages from past sessions; BPHS rules trump these if they conflict
+1. **`references/*.md`** — canonical human-readable BPHS knowledge, highest authority for Claude
+2. **`learned.json`** — passages fetched and encoded from past sessions; BPHS rules trump these if they conflict
 3. **VedAstro REST API** — live semantic search over the full BPHS text
 4. **VedAstro MCP** — fallback if REST is unavailable
 
-Entry point for all lookups: `knowledge/retriever.get_or_fetch(topic_key, query)` — walks the hierarchy and writes back to `learned.py` automatically.
+Entry point for all runtime lookups: `knowledge/retriever.get_or_fetch(topic_key, query)` — walks the hierarchy and writes back to `learned.json` automatically.
 
-### Inspecting the knowledge base
+### Inspecting and extending the knowledge base
 
 ```python
 from bphs_agent.knowledge.retriever import get_learned
 passages = get_learned("saturn_7th_house")  # None if not yet learned
 ```
 
-To manually enrich `learned.py`, edit it directly — it's a plain Python dict. Format:
-```python
-"my_topic_key": [{"text": "BPHS passage", "page": 214, "score": 1.0}]
+To manually add or correct an entry, edit `learned.json` directly — it's plain JSON:
+```json
+"my_topic_key": [{"text": "BPHS passage text", "page": 214, "score": 1.0}]
 ```
 
-To pre-warm topics before a reading:
+To pre-warm topics before a batch reading:
 ```python
 from bphs_agent.knowledge.retriever import get_or_fetch
 get_or_fetch("moon_in_scorpio", "Moon placed in Scorpio sign effects BPHS")
@@ -149,6 +150,19 @@ Read `references/matchmaking.md` for the full system. Covers:
 /match Person1 Person2
 ```
 
+### Category 6 — Career Path Analysis
+
+Read `references/career.md` for the full system. Covers:
+- 10th house (karma bhava) — lord placement, occupants, aspects
+- Dasamsa (D10) — career chart analysis
+- Profession by dominant planet significations
+- Career dasha timing — 10th lord period, Saturn, Rahu, Sun cycles
+
+```bash
+/load <name> <date> <time> <place>
+/question career
+```
+
 ---
 
 ## Citation enforcement
@@ -164,8 +178,8 @@ User → CLI / API
      → chart.client  → VedAstro API → ChartData
      → Orchestrator  → Skills (BPHS sequence)
           ↓ each skill calls get_or_fetch()
-          → learned.py (hit) → return instantly
-          → VedAstro API (miss) → encode into learned.py → return
+          → learned.json (hit) → return instantly
+          → VedAstro API (miss) → encode into learned.json → return
      → Synthesis     → cited prose reading
 ```
 
@@ -177,6 +191,6 @@ All LLM calls run `claude -p` via subprocess. See `CLAUDE.md` for developer docs
 
 1. Create `bphs_agent/skills/my_skill.py` subclassing `BaseSkill`
 2. Define `SKILL_NAME`, `RELEVANT_TOPIC_KEYS`, `RELEVANT_QUERIES`, `_system_prompt()`, `_build_user_message()`
-3. Call `get_or_fetch(topic_key, query)` in `run()` to fetch BPHS passages — this populates `learned.py` automatically
+3. Call `get_or_fetch(topic_key, query)` in `run()` to fetch BPHS passages — this populates `learned.json` automatically
 4. Register in `coordinator/orchestrator.py` and add keyword triggers in `_infer_skills()`
 5. Add a corresponding reference markdown file in `references/` if the skill introduces new knowledge domains

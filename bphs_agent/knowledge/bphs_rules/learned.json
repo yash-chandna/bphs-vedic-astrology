@@ -1,10 +1,4 @@
-"""
-Auto-encoded BPHS passages learned via VedAstro SearchSourceText.
-Each key is a topic; each value is a list of {text, page, score} dicts.
-Edit or extend these entries freely — they take precedence over API lookups.
-"""
-
-LEARNED: dict[str, list[dict]] = {
+{
   "lagna_lord_effects": [
     {
       "text": "/7/42/54. The difference comes to 0/20/40 (0 amsa 20 Kalas and 40 Vikalas). This may be converted into vikalas which will be 1240. By multiplying this figure by 60, the product will be 74,400. By dividing this product by the Vikalas of the motion of the Sun (58/2) that is by 3842, the result will be 21/5 (21 ghatikas and 5 palas). Since the longitude of the Sun calculated for the time of birth is more than the one worked out for the time at Sun rise, the Istakala of birth will be 21/5 after sunrise. From this may be worked out the longitudes of the planets and houses and then the horoscope be casted accordingly. Notes : The birth in a particular Lagna has its owns specific effects on the native. The Nasta Jataka can be reckoned with the fohowing information about each Lagna or Ascendant... Aries Ascendant--The natives of this Ascendant are of middle stature. They possess a lean and muscular body. They are neither stout nor thick. Their complexion is rough and they have a fairly long neck and face. They have bushy eyebrows and have a sharp sight. They are active and ambitious, bold and impulsive. Sometimes on account of a bad influence on Mars, the lord of this Ascendant, they become rash and aggressive. With good influences on the Ascendant they become confident, courageous, enterpri",

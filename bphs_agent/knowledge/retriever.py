@@ -26,7 +26,7 @@ VEDASTRO_SEARCH_URL = (
 )
 
 RULES_DIR = Path(__file__).parent / "bphs_rules"
-LEARNED_FILE = RULES_DIR / "learned.py"
+LEARNED_FILE = RULES_DIR / "learned.json"
 
 
 @dataclass
@@ -91,20 +91,17 @@ def format_passages_for_prompt(passages: list[BPHSPassage]) -> str:
 
 def learn_and_encode(topic_key: str, passages: list[BPHSPassage]) -> None:
     """
-    Permanently encode retrieved BPHS passages into learned.py so they become
-    hardcoded on the next lookup. Call this after receiving API results.
+    Permanently encode retrieved BPHS passages into learned.json so they become
+    available on the next lookup without an API call.
 
     topic_key: a short snake_case key, e.g. "saturn_7th_house"
     """
     if not passages:
         return
 
-    # Load existing learned entries
     learned: dict[str, list[dict]] = {}
     if LEARNED_FILE.exists():
-        namespace: dict = {}
-        exec(LEARNED_FILE.read_text(encoding="utf-8"), namespace)  # noqa: S102
-        learned = namespace.get("LEARNED", {})
+        learned = json.loads(LEARNED_FILE.read_text(encoding="utf-8"))
 
     if topic_key in learned:
         return  # already encoded — do not overwrite
@@ -113,30 +110,17 @@ def learn_and_encode(topic_key: str, passages: list[BPHSPassage]) -> None:
         {"text": p.text, "page": p.page, "score": p.score} for p in passages
     ]
 
-    # Write back as a Python literal (human-readable, editable)
-    lines = [
-        '"""',
-        "Auto-encoded BPHS passages learned via VedAstro SearchSourceText.",
-        "Each key is a topic; each value is a list of {text, page, score} dicts.",
-        "Edit or extend these entries freely — they take precedence over API lookups.",
-        '"""',
-        "",
-        f"LEARNED: dict[str, list[dict]] = {json.dumps(learned, indent=2, ensure_ascii=False)}",
-        "",
-    ]
-    LEARNED_FILE.write_text("\n".join(lines), encoding="utf-8")
+    LEARNED_FILE.write_text(json.dumps(learned, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
 def get_learned(topic_key: str) -> list[BPHSPassage] | None:
     """
-    Return hardcoded passages for a topic if already learned, else None.
+    Return passages for a topic if already in learned.json, else None.
     None signals the caller to fall back to the API and then call learn_and_encode.
     """
     if not LEARNED_FILE.exists():
         return None
-    namespace: dict = {}
-    exec(LEARNED_FILE.read_text(encoding="utf-8"), namespace)  # noqa: S102
-    learned: dict = namespace.get("LEARNED", {})
+    learned: dict = json.loads(LEARNED_FILE.read_text(encoding="utf-8"))
     entries = learned.get(topic_key)
     if not entries:
         return None
